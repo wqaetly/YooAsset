@@ -35,7 +35,7 @@ namespace YooAsset.Editor
 				// 创建说明文件
 				CreateReadme();
 				
-				Debug.Log($"构建完毕，耗时：{_elapsedTime.ElapsedMilliseconds}ms");
+				Debug.Log($"SVC搜集完毕");
 
 				OnCompletedCallback?.Invoke();
 			}
