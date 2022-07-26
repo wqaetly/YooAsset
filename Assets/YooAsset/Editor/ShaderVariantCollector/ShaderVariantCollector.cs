@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
@@ -6,21 +7,18 @@ using System.IO;
 using UnityEngine;
 using UnityEditor;
 using UnityEditor.SceneManagement;
+using Debug = UnityEngine.Debug;
 
 namespace YooAsset.Editor
 {
-	[InitializeOnLoad]
 	public static class ShaderVariantCollector
 	{
 		private const float WaitMilliseconds = 1000f;
 		private static string _saveFilePath;
 		private static bool _isStarted = false;
 		private static readonly Stopwatch _elapsedTime = new Stopwatch();
+		public static Action OnCompletedCallback;
 
-		static ShaderVariantCollector()
-		{
-			EditorApplication.update += EditorUpdate;
-		}
 		private static void EditorUpdate()
 		{
 			// 注意：一定要延迟保存才会起效
@@ -28,14 +26,21 @@ namespace YooAsset.Editor
 			{
 				_isStarted = false;
 				_elapsedTime.Stop();
-
+								
+				EditorApplication.update -= EditorUpdate;
+				
 				// 保存结果
 				SaveCurrentShaderVariantCollection();
 
 				// 创建说明文件
 				CreateReadme();
+				
+				Debug.Log($"构建完毕，耗时：{_elapsedTime.ElapsedMilliseconds}ms");
+
+				OnCompletedCallback?.Invoke();
 			}
 		}
+		
 		private static void CreateReadme()
 		{
 			AssetDatabase.Refresh(ImportAssetOptions.ForceUpdate);
@@ -59,6 +64,8 @@ namespace YooAsset.Editor
 		{
 			if (_isStarted)
 				return;
+			
+			EditorApplication.update += EditorUpdate;
 
 			if (Path.HasExtension(saveFilePath) == false)
 				saveFilePath = $"{saveFilePath}.shadervariants";
